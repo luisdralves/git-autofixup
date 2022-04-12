@@ -9,6 +9,7 @@ exceptions = {
 
 data = os.sys.stdin.read()
 for commit in data[1:].split('\n\n'):
+  print()
   lines = commit.split('\n')
   if exceptions['emptyBranch'] in lines[0] or exceptions['singleCommit'] in lines[0]:
     print(lines[0])
@@ -16,17 +17,14 @@ for commit in data[1:].split('\n\n'):
 
   commit_hash = commit[5:12]
   print(lines[0])
-  files = commit.split('\n')
+  files = list(filter(lambda line: (len(line) > 1 and '^--' not in line and line[5] == 'M'), lines[1:]))
 
-  os.system('git reset')  
-  for file in files[1:]:
-    if len(file) > 1:
-      os.system('git add '+file[14:])
+  os.system('git reset -q')
+  for file in files:
+    print(f'  {file[14:]}')
+    os.system(f'git add {file[14:]}')
 
   if commit_hash == '#######':
-    try:
-      os.system('git commit -m '+argv[1])
-    except:
-      print('There are leftovers')
+    print('There are leftovers')
   else:
-    os.system('git fixup '+commit_hash)
+    os.system(f'git fixup {commit_hash}')
